@@ -1,0 +1,11 @@
+{
+  "items": [
+    {"id": 1, "name": "羊肉串", "price": 3, "qty": 2},
+    {"id": 11, "name": "回锅肉", "price": 28, "qty": 1}
+  ],
+  "total": 34,
+  "type": "dine_in",
+  "customer_name": "测试顾客",
+  "phone": "13800138000",
+  "table": "3"
+}

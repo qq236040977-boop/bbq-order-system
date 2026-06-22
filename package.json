@@ -1,0 +1,15 @@
+{
+  "name": "bbq-order-system",
+  "version": "1.0.0",
+  "description": "本地烧烤小炒店点单系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4"
+  }
+}

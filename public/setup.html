@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>点单系统 · 二维码</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #faf7f2;
+  color: #333;
+  padding: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+h1 { text-align: center; font-size: 22px; margin-bottom: 8px; }
+.sub { text-align: center; color: #999; font-size: 13px; margin-bottom: 24px; }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card h3 { font-size: 15px; margin-bottom: 12px; color: #666; }
+
+/* URL 输入 */
+.url-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.url-input:focus { border-color: #e74c3c; }
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn:active { opacity: 0.85; }
+.btn-gray { background: #666; margin-top: 8px; }
+
+/* QR 展示区 */
+.qr-area { text-align: center; }
+.qr-area img { max-width: 240px; margin: 12px 0; border-radius: 8px; border: 1px solid #eee; }
+.qr-area .url-display {
+  font-size: 13px;
+  color: #e74c3c;
+  word-break: break-all;
+  background: #fff5f5;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+/* 步骤列表 */
+.steps { list-style: none; }
+.steps li {
+  padding: 10px 0;
+  padding-left: 32px;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.6;
+  border-bottom: 1px solid #f0f0f0;
+}
+.steps li:last-child { border-bottom: none; }
+.steps .num {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 22px;
+  height: 22px;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 22px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 提示 */
+.tip {
+  background: #fff3e0;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  color: #e65100;
+  margin-top: 12px;
+}
+.tip code {
+  background: #ffe0b2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.copy-btn {
+  display: inline-block;
+  background: none;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+</style>
+</head>
+<body>
+
+<h1>📱 点单二维码</h1>
+<p class="sub">让客人扫码点单，用他们自己的流量</p>
+
+<div class="card">
+  <h3>🔗 客人点单地址</h3>
+  <input type="text" class="url-input" id="urlInput" placeholder="输入 ngrok 地址，如 https://xxx.ngrok-free.app">
+  <button class="btn" onclick="generateQR()">生成二维码</button>
+  <div class="qr-area" id="qrArea" style="display:none">
+    <img id="qrImage" src="" alt="QR Code">
+    <div class="url-display" id="urlDisplay"></div>
+    <button class="copy-btn" onclick="copyUrl()">📋 复制链接</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3>📋 首次设置步骤</h3>
+  <ol class="steps">
+    <li>
+      <span class="num">1</span>
+      <strong>安装 Termux</strong><br>
+      从 F-Droid 或官网下载安装 Termux
+    </li>
+    <li>
+      <span class="num">2</span>
+      <strong>传项目到手机</strong><br>
+      把整个 <code>bbq-order-system</code> 文件夹传到手机
+    </li>
+    <li>
+      <span class="num">3</span>
+      <strong>安装 Node.js</strong><br>
+      在 Termux 中运行：<br>
+      <code>pkg install nodejs</code>
+    </li>
+    <li>
+      <span class="num">4</span>
+      <strong>启动服务器</strong><br>
+      进入项目目录：<br>
+      <code>cd bbq-order-system</code><br>
+      <code>npm install</code><br>
+      <code>node server.js</code>
+    </li>
+    <li>
+      <span class="num">5</span>
+      <strong>安装 ngrok</strong><br>
+      在 Termux 中：<br>
+      <code>pkg install ngrok</code><br>
+      然后在 <a href="https://ngrok.com" target="_blank">ngrok.com</a> 注册免费账号获取 token<br>
+      <code>ngrok config add-authtoken 你的token</code>
+    </li>
+    <li>
+      <span class="num">6</span>
+      <strong>启动 ngrok 隧道</strong><br>
+      新开一个 Termux 会话：<br>
+      <code>ngrok http 3000</code>
+    </li>
+    <li>
+      <span class="num">7</span>
+      <strong>生成二维码</strong><br>
+      把 ngrok 给的地址（如 https://xxx.ngrok-free.app）填到上面，生成二维码，打印贴桌上
+    </li>
+  </ol>
+</div>
+
+<div class="tip">
+  💡 <strong>每天营业第一步：</strong><br>
+  打开 Termux → 启动服务器 → 启动 ngrok → 刷新本页面确认二维码 → 开张！
+</div>
+
+<div style="text-align:center;margin-top:20px;">
+  <a href="/" style="color:#e74c3c;text-decoration:none;font-size:14px;">→ 去顾客点单页</a>
+  &nbsp;&nbsp;
+  <a href="/admin.html" style="color:#e74c3c;text-decoration:none;font-size:14px;">→ 去老板后台</a>
+</div>
+
+<script>
+function generateQR() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return alert('请输入 ngrok 地址');
+  
+  // 去掉末尾斜杠
+  const cleanUrl = url.replace(/\/$/, '');
+  
+  document.getElementById('qrImage').src = `/api/qrcode?url=${encodeURIComponent(cleanUrl)}`;
+  document.getElementById('urlDisplay').textContent = cleanUrl;
+  document.getElementById('qrArea').style.display = 'block';
+  
+  // 滚动到二维码
+  document.getElementById('qrArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyUrl() {
+  const url = document.getElementById('urlDisplay').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('已复制到剪贴板！');
+  }).catch(() => {
+    // 兼容旧浏览器
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('已复制！');
+  });
+}
+
+// 自动填入 localStorage 记住的 URL
+const saved = localStorage.getItem('orderUrl');
+if (saved) {
+  document.getElementById('urlInput').value = saved;
+}
+
+document.getElementById('urlInput').addEventListener('change', function() {
+  localStorage.setItem('orderUrl', this.value.trim());
+});
+</script>
+</body>
+</html>
