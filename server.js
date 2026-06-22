@@ -6,6 +6,14 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 健康检查路由（必须最前面）
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
+// 根路由
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // 强制 UTF-8 编码
 app.use(express.json({ limit: '10mb', type: 'application/json' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
