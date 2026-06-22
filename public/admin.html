@@ -1365,40 +1365,70 @@ function testNotification() {
   showToast('🔔 测试提醒已触发，请检查声音和震动');
 }
 
-// ========== SSE 实时监听 ==========
-let eventSource = null;
+// ========== 实时监听（支持 SSE 和轮询两种模式）==========
+let pollTimer = null;
+let lastOrderCount = -1;
 
-function connectSSE() {
-  if (eventSource) {
-    eventSource.close();
-  }
-  
-  eventSource = new EventSource('/api/events');
-  
-  eventSource.onmessage = (event) => {
+function startPolling() {
+  // 先尝试 SSE（本地服务器），失败则用轮询（CF Pages）
+  if (typeof EventSource !== 'undefined') {
     try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'new_order') {
-        notifyNewOrder(data.data);
-        loadOrders(); // 刷新订单列表
-      }
-    } catch (e) {
-      console.log('SSE 消息解析失败:', e);
+      const es = new EventSource('/api/events');
+      let connected = false;
+      es.onopen = () => { connected = true; };
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_order' || (data.type === 'poll' && data.data)) {
+            if (data.type === 'new_order') {
+              notifyNewOrder(data.data);
+              loadOrders();
+            } else {
+              checkNewOrders(data.data.recent_orders || []);
+            }
+          }
+        } catch(e) {}
+      };
+      es.onerror = () => {
+        es.close();
+        if (!connected) { /* SSE不可用，已自动切换到轮询 */ }
+      };
+    } catch(e) {
+      usePollingMode();
     }
-  };
-  
-  eventSource.onerror = () => {
-    setTimeout(connectSSE, 5000); // 5秒后重连
-  };
+  }
+  usePollingMode();
 }
 
-// 页面加载时连接 SSE
+function usePollingMode() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await API('/api/events?_=' + Date.now());
+      if (res.ok && res.data && res.data.recent_orders) {
+        checkNewOrders(res.data.recent_orders);
+      }
+    } catch(e) {}
+  }, 5000); // 每5秒轮询一次
+}
+
+function checkNewOrders(recentOrders) {
+  if (!recentOrders || recentOrders.length === 0) return;
+  if (lastOrderCount < 0) { lastOrderCount = recentOrders.length; return; }
+  if (recentOrders.length > lastOrderCount) {
+    const newOrders = recentOrders.slice(0, recentOrders.length - lastOrderCount);
+    newOrders.forEach(o => notifyNewOrder(o));
+    loadOrders();
+  }
+  lastOrderCount = recentOrders.length;
+}
+
 // ========== 页面初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
   loadNotificationSettings();
   requestNotificationPermission();
   loadSettings();
-  connectSSE();
+  startPolling();
 });
 function showConfirm(msg, cb, type) {
   document.getElementById('confirmMsg').textContent = msg;

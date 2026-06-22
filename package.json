@@ -1,14 +1,1 @@
-{
-  "name": "bbq-order-system",
-  "version": "1.0.0",
-  "description": "本地烧烤小炒店点单系统",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
-    "qrcode": "^1.5.4"
-  }
-}
+{"name": "bbq-order-system", "version": "2.0.0", "description": "春萍烧烤点单系统 - 支持Cloudflare Pages部署", "main": "functions/_lib.js", "scripts": {"start": "node server.js"}, "dependencies": {"express": "^4.18.2", "multer": "^1.4.5-lts.1", "qrcode": "^1.5.4"}}
